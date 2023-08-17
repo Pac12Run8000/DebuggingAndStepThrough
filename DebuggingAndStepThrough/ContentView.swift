@@ -1,45 +1,54 @@
-//
-//  ContentView.swift
-//  DebuggingAndStepThrough
-//
-//  Created by Michelle Grover on 8/17/23.
-//
-
 import SwiftUI
 import Foundation
 
 struct ContentView: View {
+    @State private var sourceDescription: String = ""
+    @State private var nation: String = ""
+    @State private var population: Int = 0
+
     var body: some View {
-            VStack {
-                Button(action: {
-                    Task {
-                        await fetchData()
-                    }
-                }) {
-                    Text("Fetch Data")
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+        VStack(spacing: 20) {
+            Text("Source Description: \(sourceDescription)")
+            Text("Nation: \(nation)")
+            Text("Population: \(population)")
+            
+            Button("Fetch Data") {
+                Task {
+                    await fetchData()
                 }
             }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(8)
         }
-        
-        func fetchData() async {
-            guard let url = URL(string: "https://datausa.io/api/data?drilldowns=Nation&measures=Population&year=latest") else {
-                print("Invalid URL")
-                return
+        .padding()
+    }
+
+    func fetchData() async {
+        let urlString = "https://datausa.io/api/data?drilldowns=Nation&measures=Population&year=latest"
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            return
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let decodedData = try JSONDecoder().decode(Welcome.self, from: data)
+            
+            if let firstDatum = decodedData.data.first {
+                nation = firstDatum.nation
+                population = firstDatum.population
             }
             
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print(jsonString)
-                }
-            } catch {
-                print("HTTP Request Failed \(error)")
+            if let firstSource = decodedData.source.first {
+                sourceDescription = firstSource.annotations.sourceDescription
             }
+            
+        } catch {
+            print("Failed to fetch data: \(error)")
         }
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
