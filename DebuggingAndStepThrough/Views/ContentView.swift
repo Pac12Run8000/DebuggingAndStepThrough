@@ -19,6 +19,7 @@ struct ContentView: View {
                    .background(Color.blue)
                    .foregroundColor(.white)
                    .cornerRadius(8)
+            Text("https://datausa.io/api/data?drilldowns=Nation&measures=Population")
                }
                .padding()
     }
